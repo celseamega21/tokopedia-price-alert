@@ -15,5 +15,3 @@ COPY . .
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8001
-
-ENTRYPOINT ["gunicorn", "project.wsgi:application", "--bind", "0.0.0.0:8001"]

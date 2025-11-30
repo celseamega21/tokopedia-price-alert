@@ -26,9 +26,9 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG")
+DEBUG = False
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1").split(',')
+ALLOWED_HOSTS = ("localhost", "127.0.0.1")
 
 AUTH_USER_MODEL = 'account.User'
 
@@ -90,7 +90,7 @@ DATABASES = {
         'NAME': os.getenv("POSTGRES_DB"),
         'USER': os.getenv("POSTGRES_USER"),
         'PASSWORD': os.getenv("POSTGRES_PASSWORD"),
-        'HOST': 'localhost',
+        'HOST': os.getenv("POSTGRES_HOST"),
         'PORT': '5432',
     }
 }
@@ -151,12 +151,14 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_REFRESH': 'refresh_token',
 }
 
-# celery settings
+# celery
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
-CELERY_WORKER_LOG_LEVEL = 'INFO'
 
-# Email settings
+# redis
+REDIS_URL = os.getenv("REDIS_URL")
+
+# Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587

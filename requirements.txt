@@ -18,11 +18,16 @@ djangorestframework_simplejwt==5.5.0
 dotenv==0.9.9
 gunicorn==23.0.0
 idna==3.10
+iniconfig==2.3.0
 kombu==5.5.3
 packaging==25.0
+pluggy==1.6.0
 prompt_toolkit==3.0.51
 psycopg2-binary==2.9.10
+Pygments==2.19.2
 PyJWT==2.9.0
+pytest==9.0.1
+pytest-django==4.11.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 redis==6.2.0

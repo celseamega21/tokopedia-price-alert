@@ -2,10 +2,11 @@ from typing import NamedTuple, Optional
 import requests
 from bs4 import BeautifulSoup
 from logging import getLogger
+from .load_balancer import clean_price
 
 logger = getLogger(__name__)
 
-class Product(NamedTuple):
+class InitialProduct(NamedTuple):
     name: str
     discount_price: str
     original_price: Optional[str]
@@ -46,12 +47,11 @@ class Scraper:
             discount_price = discount_price.get_text(strip=True)
             original_price = discount_price
 
-        product_result = Product(
+        product_result = InitialProduct(
             name=name,
             discount_price=discount_price,
             original_price=original_price,
         )
-
         results.append(product_result)
 
         if not results:
@@ -59,6 +59,6 @@ class Scraper:
         
         return {
             "product_name": name if name else "Unknown",
-            "original_price": original_price if original_price else "Unknown",
-            "discount_price": discount_price if discount_price else "Unknown"
+            "original_price": original_price if original_price else 0,
+            "discount_price": discount_price if discount_price else 0
         }

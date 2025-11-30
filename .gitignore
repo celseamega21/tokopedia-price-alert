@@ -1,6 +1,7 @@
 # virtual env
 venv/
 .env
+.env.docker
 
 # python
 *.pyc
@@ -16,6 +17,7 @@ db.sqlite3
 celerybeat-schedule
 celerybeat.pid
 celery.log
+dump.rdb
 
 # project
 scraper/__pycache__/
@@ -24,7 +26,6 @@ scraper/*.pyo
 tasks/__pycache__/
 tasks/*.pyc
 tasks/*.pyo
-product/selector.py
 
 # IDE
 .vscode/

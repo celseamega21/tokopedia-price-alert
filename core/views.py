@@ -1,10 +1,11 @@
 from .serializers import ProductInputSerializer, ProductOutputSerializer
 from rest_framework import views, status, permissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Product
+from .models import Product, PriceHistory
 from rest_framework.response import Response
-from scraper.load_balancer import LoadBalancer
-from scraper.tasks import initial_scrape
+from scraper.load_balancer import LoadBalancer, clean_price
+from scraper.tasks import check_price
+from scraper.scraper import Scraper
 
 class ProductListCreateView(views.APIView):
     serializer_class = ProductInputSerializer
@@ -28,14 +29,27 @@ class ProductListCreateView(views.APIView):
         if not product_url or not email:
             return Response({'error': 'Product URL and email are required.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # add load balancing here
+        #get engine
         engine = LoadBalancer.get_scraper_engine()
         if not engine:
             return Response({"error": "No active scraper engines available"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        product = Product.objects.create(url=product_url, email=email, user=request.user, engine=engine)
+        try:
+            scraped = Scraper(product_url).scrape_product()
+        except:
+            return Response(
+                {"error": "Failed to scraped product"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        name = scraped.get("product_name")
+        price = clean_price(scraped.get("discount_price"))
 
-        initial_scrape.delay(product.id)
+        product = Product.objects.create(url=product_url, email=email, user=request.user, engine=engine, name=name, last_price=price)
+
+        PriceHistory.objects.create(product=product, price=price)
+
+        check_price.delay(product.id)
 
         return Response({"message": "Product was successfully tracked!"}, status=status.HTTP_201_CREATED)
     

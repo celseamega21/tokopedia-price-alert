@@ -8,51 +8,27 @@ from .models import ScraperEngine
 
 logger = get_task_logger(__name__)
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=5)
-def initial_scrape(self, product_id):
-    try:
-        product = Product.objects.get(id=product_id)
-    except Product.DoesNotExist:
-        logger.error(f"Product with ID {product_id} does not exist")
-        return
-    
-    try:
-        scraped = Scraper(product.url).scrape_product()
-        if not scraped:
-            logger.warning(f"Scraper failed. Product not found at {product.url}")
-            return
-    except Exception as e:
-        product.engine.task_count = max(product.engine.task_count - 1, 0)
-        product.engine.save(update_fields=['task_count'])
-        logger.error(f"Scraper failed for {product.url}: {e}")
-        raise self.retry(exc=e)
-    
-    new_price = scraped['discount_price']
-    product.name = scraped['product_name']
-    product.last_price = new_price
-    product.save(update_fields=['name', 'last_price'])
-
-    PriceHistory.objects.create(product=product, price=new_price)
-
-    logger.info(f"Initial scrape completed for: {product.name}")
-
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=5)
 def check_price(self, engine_id):
+    engine = None
     try:
         engine = ScraperEngine.objects.get(id=engine_id)
-        products = Product.objects.filter(engine=engine).exclude(last_price__isnull=True).exclude(last_price__exact='')
+        products = Product.objects.filter(engine=engine)
 
         for product in products:
             try:
                 scraper = Scraper(product.url).scrape_product()
+                print(f"hasil scrape: {scraper}")
             except Exception as e:
                 logger.warning(f"Failed to scrape price for {product.name}: {e}")
                 continue
-
-            new_price = scraper.get("discount_price")
+ 
+            new_price_raw = scraper.get("discount_price")
+            new_price = clean_price(new_price_raw)
+            print(f"New price: {new_price}")
             
-            if clean_price(new_price) < clean_price(product.last_price):
+            if new_price < product.last_price:
                 body_html = f"""
                 <html>
                 <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
@@ -108,8 +84,9 @@ def check_price(self, engine_id):
                 logger.info(f"Price for {product.name} has not dropped. Current price: {new_price}, Last price: {product.last_price}")
 
     finally:
-        engine.task_count = max(engine.task_count -1, 0)
-        engine.save(update_fields=['task_count', 'updated_at'])
+        if engine is not None:
+            engine.task_count = max(engine.task_count - 1, 0)
+            engine.save(update_fields=['task_count', 'updated_at'])
 
 
 @shared_task(autoretry_for=(Exception,), retry_backoff=True, max_retries=5)
@@ -117,3 +94,34 @@ def check_price_all_engines(*args, **kwargs):
     logger.info("Running check_price_all_engines task from beat")
     for engine in ScraperEngine.objects.all():
         check_price.delay(engine.id)
+
+# @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=5)
+# def initial_scrape(self, product_id):
+#     try:
+#         product = Product.objects.get(id=product_id)
+#     except Product.DoesNotExist:
+#         logger.error(f"Product with ID {product_id} does not exist")
+#         return
+    
+#     try:
+#         scraped = Scraper(product.url).scrape_product()
+#         print(f"Price: {scraped['discount_price']}")
+#         if not scraped:
+#             logger.warning(f"Scraper failed. Product not found at {product.url}")
+#             return
+#     except Exception as e:
+#         product.engine.task_count = max(product.engine.task_count - 1, 0)
+#         product.engine.save(update_fields=['task_count'])
+#         logger.error(f"Scraper failed for {product.url}: {e}")
+#         raise self.retry(exc=e)
+    
+#     new_price = clean_price(scraped['discount_price'])
+#     product.name = scraped['product_name']
+#     product.last_price = new_price
+#     logger.warning(f"Price: {new_price}")
+#     logger.warning(f"Last price: {product.last_price}")
+#     product.save(update_fields=['name', 'last_price'])
+
+#     PriceHistory.objects.create(product=product, price=new_price)
+
+#     logger.info(f"Initial scrape completed for: {product.name}")

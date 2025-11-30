@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from .models import Product
-from scraper.scraper import Scraper
-from scraper.tasks import initial_scrape
 
 # serializer for input data
 class ProductInputSerializer(serializers.ModelSerializer):
