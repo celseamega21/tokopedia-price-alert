@@ -60,8 +60,8 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 samesite='Lax',
                 max_age=3600*24*7,
             )
-            # del response.data['access']
-            # del response.data['refresh']
+            del response.data['access']
+            del response.data['refresh']
         except Exception:
             logger.exception('Error setting auth cookies')
             return Response({"error": "Failed to set authentication cookies"}, 

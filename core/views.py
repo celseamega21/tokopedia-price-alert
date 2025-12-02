@@ -3,7 +3,8 @@ from rest_framework import views, status, permissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Product, PriceHistory
 from rest_framework.response import Response
-from scraper.load_balancer import LoadBalancer, clean_price
+from scraper.load_balancer import LoadBalancer
+from scraper.utils import clean_price
 from scraper.tasks import check_price
 from scraper.scraper import Scraper
 

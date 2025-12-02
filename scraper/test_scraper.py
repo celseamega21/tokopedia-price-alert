@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, Mock
 from core.models import PriceHistory, Product
 from .tasks import check_price
-from scraper.load_balancer import clean_price
+from scraper.utils import clean_price
 
 @patch('scraper.tasks.send_mail')
 @patch('scraper.tasks.Scraper')
@@ -18,7 +18,6 @@ def test_check_price_decrease(mock_scraper, mock_send_mail, product, scraper_eng
         "discount_price": "Rp100.000"
     }
     mock_scraper.return_value = mock_instance
-    print("MOCK READY:", mock_instance.scrape_product())
     mock_send_mail.return_value = 1
 
     check_price(scraper_engine.id)
@@ -63,4 +62,4 @@ def test_clean_price():
     assert clean_price("Rp 2.989.000") == 2989000
     assert clean_price(0) == 0
     assert clean_price(None) == 0
-    assert clean_price("tes") == 0
+    assert clean_price("test") == 0

@@ -2,7 +2,6 @@ from typing import NamedTuple, Optional
 import requests
 from bs4 import BeautifulSoup
 from logging import getLogger
-from .load_balancer import clean_price
 
 logger = getLogger(__name__)
 

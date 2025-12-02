@@ -7,10 +7,11 @@ venv/
 *.pyc
 *.pyo
 __pychache__/
+.pytest_cache/
 
 # django
 db.sqlite3
-**/migrations/
+**/migrations/    
 *.log
 
 # celery
